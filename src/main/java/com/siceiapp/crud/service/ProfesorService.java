@@ -2,59 +2,85 @@ package com.siceiapp.crud.service;
 
 import com.siceiapp.crud.dto.ProfesorDTO;
 import com.siceiapp.crud.dto.request.PreProfesorRequest;
+import com.siceiapp.crud.exceptions.BusinessException;
+import com.siceiapp.crud.repositories.ProfesorRepository;
+import com.siceiapp.crud.schema.ProfesorSchema;
+
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
 public class ProfesorService {
-    private List<ProfesorDTO> profesores = new ArrayList<>();
-    public ProfesorService() {
-        this.profesores = new ArrayList<>();
+
+    private final ProfesorRepository profesorRepository;
+
+    public ProfesorService(ProfesorRepository profesorRepository) {
+        this.profesorRepository = profesorRepository;
     }
 
     public List<ProfesorDTO> getProfesores() {
-        return profesores;
+        return profesorRepository
+                .findAll()
+                .stream()
+                .map(ProfesorDTO::getFromSchema)
+                .toList();
     }
+
     //Obtener el profesor según su ID
     public ProfesorDTO getProfesorById(int id) {
-        for (ProfesorDTO profesor : profesores) {
-            if (profesor.getId() == id) {
-                return profesor;
-            }
-        }
-        return null;
+        Optional<ProfesorSchema> profesor = profesorRepository
+                .findById(id);
+        return profesor.map(ProfesorDTO::getFromSchema).orElse(null);
     }
     //Crear un nuevo profesor
     public ProfesorDTO createProfesor(PreProfesorRequest profesorAuxiliar){
-        ProfesorDTO nuevoProfesor = new ProfesorDTO(profesorAuxiliar.getId(), profesorAuxiliar.getNumeroEmpleado(), profesorAuxiliar.getNombres(), profesorAuxiliar.getApellidos(), profesorAuxiliar.getHorasClase());
+        if(profesorRepository.findById(profesorAuxiliar.getId()).isPresent()){
+            throw BusinessException
+                    .builder()
+                    .message("Mismo id")
+                    .build();
+        }
 
-        profesores.add(nuevoProfesor);
-        return nuevoProfesor;
+        ProfesorSchema profesorSchema = new ProfesorSchema();
+        profesorSchema.setNombres(profesorAuxiliar.getNombres());
+        profesorSchema.setApellidos(profesorAuxiliar.getApellidos());
+        profesorSchema.setHorasClase(profesorAuxiliar.getHorasClase());
+        profesorSchema.setNumeroEmpleado(profesorAuxiliar.getNumeroEmpleado());
+
+        ProfesorSchema profesorGuadado = profesorRepository.save(profesorSchema);
+
+        return ProfesorDTO.getFromSchema(profesorGuadado);
     }
+
     //Actualizar datos de un profesor existente
     public ProfesorDTO actualizar(int id, PreProfesorRequest profesorAuxiliar){
-        Optional<ProfesorDTO> profesorExistente = profesores.stream().filter(a -> a.getId() == id).findFirst();
-        profesorExistente.ifPresent(value -> {
-            value.setNumeroEmpleado(profesorAuxiliar.getNumeroEmpleado());
-            value.setNombres(profesorAuxiliar.getNombres());
-            value.setApellidos(profesorAuxiliar.getApellidos());
-            value.setHorasClase(profesorAuxiliar.getHorasClase());
-        });
-        return profesorExistente.orElse(null);
+        Optional<ProfesorSchema> profesorExistente = profesorRepository.findById(id);
+
+        if (profesorExistente.isPresent()) {
+            ProfesorSchema profesor = profesorExistente.get();
+            profesor.setNumeroEmpleado(profesorAuxiliar.getNumeroEmpleado());
+            profesor.setNombres(profesorAuxiliar.getNombres());
+            profesor.setApellidos(profesorAuxiliar.getApellidos());
+            profesor.setHorasClase(profesorAuxiliar.getHorasClase());
+
+            ProfesorSchema profesorActualizado = profesorRepository.save(profesor);
+
+            return ProfesorDTO.getFromSchema(profesorActualizado);
+        } else {
+            return null;
+        }
     }
+
     //Eliminar a un profesor
     public ProfesorDTO deleteProfesor(int id){
-        ProfesorDTO profesorParaEliminar = null;
-        for (ProfesorDTO profesor : profesores) {
-            if (profesor.getId() == id) {
-                profesorParaEliminar = profesor;
-                break;
-            }
+        Optional<ProfesorSchema> profesorAEliminar = profesorRepository.findById(id);
+
+        if (profesorAEliminar.isPresent()) {
+            profesorRepository.deleteById(id);
+            return ProfesorDTO.getFromSchema(profesorAEliminar.get());
+        } else {
+            return null;
         }
-        if (profesorParaEliminar != null) {
-            profesores.remove(profesorParaEliminar);
-        }
-        return profesorParaEliminar;
     }
 }

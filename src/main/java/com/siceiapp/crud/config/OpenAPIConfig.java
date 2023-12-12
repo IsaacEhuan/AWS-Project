@@ -12,7 +12,7 @@ public class OpenAPIConfig {
         return new OpenAPI().info(new Info()
                 .title("siceiapp")
                 .version("v0.0.1")
-                .description("Primera entrega proyecto final AWS")
+                .description("Proyecto final AWS")
                 .license(new License()
                         .name("Apache 2.0")
                         .url("https://www.siceiapp.com/")

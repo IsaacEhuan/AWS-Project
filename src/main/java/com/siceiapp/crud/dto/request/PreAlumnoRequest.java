@@ -24,5 +24,10 @@ public class PreAlumnoRequest {
     
     @DecimalMin(value = "0.0", inclusive = true, message = "El promedio ingresado debe ser un número  mayor o igual a 0")
     @DecimalMax(value = "100.0", inclusive = true, message = "El promedio ingrsado debe ser un número  menor o igual a 100")
+
     private double promedio;
+    
+    private String fotoPerfilUrl;
+
+    private String password;
 }

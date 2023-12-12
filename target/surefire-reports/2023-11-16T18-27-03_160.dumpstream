@@ -1,5 +1,0 @@
-# Created at 2023-11-16T18:27:03.405
-Boot Manifest-JAR contains absolute paths in classpath 'D:\AWS Project\hecho en inicializer\crud\crud\target\test-classes'
-Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
-'other' has different root
-
